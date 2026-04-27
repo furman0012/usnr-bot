@@ -2,7 +2,7 @@ import requests
 import time
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, MessageHandler, filters
 import asyncio
@@ -106,7 +106,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 3. Wait for OTP delivery
 4. Use OTP for verification
 
-🔑 <b>Instagram Service Price:</b> 10 credits per number
+🔑 <b>Instagram Service Price:</b> {get_instagram_price()} credits per number
     """
     
     keyboard = [
@@ -423,11 +423,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode='HTML'
         )
     elif query.data == "history":
-        # Call history command
-        await history_command(update, context)
+        # Create a fake update object to call history command
+        fake_update = Update(
+            update_id=update.update_id,
+            message=query.message
+        )
+        await history_command(fake_update, context)
 
-async def setup_commands(application):
-    """Set up bot commands menu"""
+async def post_init(application: Application):
+    """Set up bot commands after initialization"""
     commands = [
         BotCommand("start", "Start the bot"),
         BotCommand("generate", "Buy Instagram number"),
@@ -436,13 +440,20 @@ async def setup_commands(application):
         BotCommand("addcredit", "Admin: Add credits to user")
     ]
     await application.bot.set_my_commands(commands)
+    print("✅ Bot commands configured successfully!")
 
 def main():
     """Main function to run the bot"""
     print("🤖 Starting Telegram Bot...")
     
-    # Create application
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    # Create application with specific settings for Railway
+    application = (
+        Application.builder()
+        .token(TELEGRAM_BOT_TOKEN)
+        .post_init(post_init)
+        .concurrent_updates(True)
+        .build()
+    )
     
     # Add handlers
     application.add_handler(CommandHandler("start", start))
@@ -452,12 +463,23 @@ def main():
     application.add_handler(CommandHandler("addcredit", admin_credit_command))
     application.add_handler(CallbackQueryHandler(button_handler))
     
-    # Set up commands
-    application.job_queue.run_once(setup_commands, 0)
+    # Start bot with webhook for Railway
+    PORT = int(os.environ.get("PORT", 8080))
+    APP_URL = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
     
-    # Start bot
-    print("✅ Bot is running...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    if APP_URL:
+        # Use webhook for production
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=PORT,
+            url_path=TELEGRAM_BOT_TOKEN,
+            webhook_url=f"https://{APP_URL}/{TELEGRAM_BOT_TOKEN}"
+        )
+        print(f"✅ Bot running with webhook on port {PORT}")
+    else:
+        # Use polling for development
+        print("✅ Bot running with polling...")
+        application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()
