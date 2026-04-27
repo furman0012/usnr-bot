@@ -17,9 +17,9 @@ API_KEY = "dbf85125f5976abc68f1a2b168cdc83f"
 BASE_URL = "https://botp.live/api"
 
 # ---------- TELEGRAM CONFIG ----------
-TELEGRAM_BOT_TOKEN = "5983913903:AAF-5JBNKSwJs29VlxrZA-Kg59YLeEeluQ8"
+TELEGRAM_BOT_TOKEN = "8746609920:AAG3u2p-f7tC-gLTrTdGMuToQ4eRzq9Vjw8"
 ADMIN_USER_IDS = [1857783746]  # Admin Telegram User IDs
-YOUR_PROFILE_LINK = "https://t.me/YourUsername"  # Apna Telegram profile link yahan daalo
+YOUR_PROFILE_LINK = "https://t.me/FUR_MAN"  # Apna Telegram profile link yahan daalo
 
 # ---------- INSTAGRAM APP ID ----------
 INSTAGRAM_APP_ID = "5"  # Instagram service ka app ID
